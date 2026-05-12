@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:async';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 import 'package:ai_diet_coach/features/patient/nutrition/models/nutrition_plan_model.dart';
@@ -14,8 +15,8 @@ class GeminiService {
 
   GeminiService({
     required this.apiKey,
-    String flashModelName = 'gemini-2.5-flash-lite', // أخف وأكثر quota
-    String proModelName = 'gemini-2.5-flash',
+    String flashModelName = 'gemini-2.5-flash', // Highly efficient and stable
+    String proModelName = 'gemini-2.5-flash', // More capable for complex plans
   }) {
     final safetySettings = [
       SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium),
@@ -39,6 +40,34 @@ class GeminiService {
     );
   }
 
+  // Helper for retrying transient errors (like 503)
+  Future<T> _retry<T>(
+    Future<T> Function() action, {
+    int maxAttempts = 3,
+  }) async {
+    int attempts = 0;
+    while (true) {
+      attempts++;
+      try {
+        return await action();
+      } catch (e) {
+        final errorStr = e.toString();
+        // Check for 503 (Unavailable) or 429 (Too Many Requests)
+        bool isTransient =
+            errorStr.contains('503') ||
+            errorStr.contains('429') ||
+            errorStr.contains('UNAVAILABLE');
+
+        if (isTransient && attempts < maxAttempts) {
+          // Exponential backoff
+          await Future.delayed(Duration(seconds: attempts * 2));
+          continue;
+        }
+        rethrow;
+      }
+    }
+  }
+
   // ====================== NUTRITION PLAN ======================
   Future<NutritionPlanModel> generateDietPlan({
     required int age,
@@ -51,7 +80,9 @@ class GeminiService {
     List<String>? allergies,
     String? additionalNotes,
   }) async {
-    final prompt = '''
+    return _retry(() async {
+      final prompt =
+          '''
 Generate a highly personalized and unique nutrition plan for:
 - Age: $age years, Weight: $weight kg, Height: $height cm, Goal: $goal
 ${healthCondition != null ? '- Health Condition: $healthCondition' : ''}
@@ -68,19 +99,20 @@ Important:
 - Return ONLY valid JSON.
 ''';
 
-    final response = await _proModel.generateContent(
-      [Content.text(prompt)],
-      generationConfig: GenerationConfig(
-        responseMimeType: 'application/json',
-        responseSchema: _nutritionSchema,
-        temperature: 0.4,
-      ),
-    );
+      final response = await _proModel.generateContent(
+        [Content.text(prompt)],
+        generationConfig: GenerationConfig(
+          responseMimeType: 'application/json',
+          responseSchema: _nutritionSchema,
+          temperature: 0.4,
+        ),
+      );
 
-    final text = response.text;
-    if (text == null || text.isEmpty)
-      throw Exception("Empty response from Gemini");
-    return NutritionPlanModel.fromJson(jsonDecode(text));
+      final text = response.text;
+      if (text == null || text.isEmpty)
+        throw Exception("Empty response from Gemini");
+      return NutritionPlanModel.fromJson(jsonDecode(text));
+    });
   }
 
   // ====================== WORKOUT PLAN ======================
@@ -90,7 +122,9 @@ Important:
     required double height,
     required String goal,
   }) async {
-    final prompt = '''
+    return _retry(() async {
+      final prompt =
+          '''
 Generate a 7-day personalized workout plan for:
 - Age: $age, Weight: $weight kg, Height: $height cm, Goal: $goal
 Important: 
@@ -101,26 +135,29 @@ Important:
 Return ONLY valid JSON.
 ''';
 
-    final response = await _proModel.generateContent(
-      [Content.text(prompt)],
-      generationConfig: GenerationConfig(
-        responseMimeType: 'application/json',
-        responseSchema: _workoutSchema,
-        temperature: 0.4,
-      ),
-    );
+      final response = await _proModel.generateContent(
+        [Content.text(prompt)],
+        generationConfig: GenerationConfig(
+          responseMimeType: 'application/json',
+          responseSchema: _workoutSchema,
+          temperature: 0.4,
+        ),
+      );
 
-    final text = response.text;
-    if (text == null || text.isEmpty)
-      throw Exception("Empty response from Gemini");
-    return WorkoutPlanModel.fromJson(jsonDecode(text));
+      final text = response.text;
+      if (text == null || text.isEmpty)
+        throw Exception("Empty response from Gemini");
+      return WorkoutPlanModel.fromJson(jsonDecode(text));
+    });
   }
 
   Future<WorkoutPlanModel> modifyWorkoutPlan({
     required WorkoutPlanModel currentPlan,
     required String userMessage,
   }) async {
-    final prompt = '''
+    return _retry(() async {
+      final prompt =
+          '''
 Current Workout Plan:
 ${jsonEncode(currentPlan.toJson())}
 
@@ -133,19 +170,20 @@ Important:
 - Return ONLY valid JSON.
 ''';
 
-    final response = await _proModel.generateContent(
-      [Content.text(prompt)],
-      generationConfig: GenerationConfig(
-        responseMimeType: 'application/json',
-        responseSchema: _workoutSchema,
-        temperature: 0.3,
-      ),
-    );
+      final response = await _proModel.generateContent(
+        [Content.text(prompt)],
+        generationConfig: GenerationConfig(
+          responseMimeType: 'application/json',
+          responseSchema: _workoutSchema,
+          temperature: 0.3,
+        ),
+      );
 
-    final text = response.text;
-    if (text == null || text.isEmpty)
-      throw Exception("Empty response from Gemini");
-    return WorkoutPlanModel.fromJson(jsonDecode(text));
+      final text = response.text;
+      if (text == null || text.isEmpty)
+        throw Exception("Empty response from Gemini");
+      return WorkoutPlanModel.fromJson(jsonDecode(text));
+    });
   }
 
   // ====================== FOOD SCANNER ======================
@@ -153,35 +191,39 @@ Important:
     required List<int> imageBytes,
     required double grams,
   }) async {
-    final prompt =
-        'Analyze this food image and calculate nutrition facts for exactly $grams grams. Return ONLY valid JSON.';
+    return _retry(() async {
+      final prompt =
+          'Analyze this food image and calculate nutrition facts for exactly $grams grams. Return ONLY valid JSON.';
 
-    final response = await _flashModel.generateContent(
-      [
-        Content.multi([
-          TextPart(prompt),
-          DataPart('image/jpeg', Uint8List.fromList(imageBytes)),
-        ]),
-      ],
-      generationConfig: GenerationConfig(
-        responseMimeType: 'application/json',
-        responseSchema: _foodSchema,
-        temperature: 0.1,
-      ),
-    );
+      final response = await _flashModel.generateContent(
+        [
+          Content.multi([
+            TextPart(prompt),
+            DataPart('image/jpeg', Uint8List.fromList(imageBytes)),
+          ]),
+        ],
+        generationConfig: GenerationConfig(
+          responseMimeType: 'application/json',
+          responseSchema: _foodSchema,
+          temperature: 0.1,
+        ),
+      );
 
-    final text = response.text;
-    if (text == null || text.isEmpty)
-      throw Exception("Empty response from Gemini");
-    return FoodAnalysisModel.fromJson(jsonDecode(text), grams);
+      final text = response.text;
+      if (text == null || text.isEmpty)
+        throw Exception("Empty response from Gemini");
+      return FoodAnalysisModel.fromJson(jsonDecode(text), grams);
+    });
   }
 
   // ====================== CHAT ======================
 
   Future<String> chat(String message, {List<Content>? history}) async {
-    final chat = _proModel.startChat(history: history ?? []);
-    final response = await chat.sendMessage(Content.text(message));
-    return response.text ?? "عذراً، لم أفهم الطلب.";
+    return _retry(() async {
+      final chat = _proModel.startChat(history: history ?? []);
+      final response = await chat.sendMessage(Content.text(message));
+      return response.text ?? "عذراً، لم أفهم الطلب.";
+    });
   }
 
   // ====================== SYSTEM PROMPT ======================

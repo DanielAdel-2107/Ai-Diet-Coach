@@ -44,27 +44,33 @@ class LocalNotificationsServices {
 
   // Permission check
   static Future<bool> requestPermission() async {
-    final androidImplementation = _flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    try {
+      final androidImplementation = _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
 
-    if (androidImplementation != null) {
-      final bool? granted = await androidImplementation.requestNotificationsPermission();
-      // On Android < 13, requestNotificationsPermission might return null, meaning permission is already implicitly granted.
-      return granted ?? true;
+      if (androidImplementation != null) {
+        final bool? granted =
+            await androidImplementation.requestNotificationsPermission();
+        // On Android < 13, requestNotificationsPermission might return null, meaning permission is already implicitly granted.
+        return granted ?? true;
+      }
+      return true;
+    } catch (e) {
+      debugPrint("Notification Permission Error: $e");
+      return true; // Fallback to true to avoid blocking the UI flow
     }
-
-    // For non-Android platforms (if needed), or fallback
-    return true;
   }
 
   static Future<void> requestExactAlarmPermission() async {
-    final androidImplementation = _flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-
     try {
-      await androidImplementation?.requestExactAlarmsPermission();
+      final androidImplementation = _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+
+      if (androidImplementation != null) {
+        await androidImplementation.requestExactAlarmsPermission();
+      }
     } catch (e) {
       debugPrint("Error requesting exact alarm permission: $e");
     }

@@ -60,7 +60,20 @@ class SignUpCubit extends Cubit<SignUpState> {
         bmi: _calculateBMI(weight, height),
       );
 
-      await addData(tableName: 'user_profiles', data: userModel.toJson());
+      await addData(
+        tableName: 'user_profiles',
+        data: {
+          'id': user.id,
+          'name': name,
+          'email': email,
+          'gender': gender,
+          'age': age,
+          'height': height,
+          'weight': weight,
+          'goal': goal,
+          'bmi': _calculateBMI(weight, height),
+        },
+      );
 
       emit(SignUpSuccess());
     } catch (e) {

@@ -21,7 +21,7 @@ class NutritionCubit extends Cubit<NutritionState> {
       return;
     }
 
-    emit(NutritionGenerating()); // Reusing generating state for loading
+    emit(NutritionGenerating());
     try {
       final planData = await getIt<SupabaseClient>()
           .from('nutrition_plans')
@@ -29,18 +29,16 @@ class NutritionCubit extends Cubit<NutritionState> {
           .eq('user_id', user.id);
 
       if (planData.isNotEmpty) {
-        // Convert the database records back into a NutritionPlanModel
-        // Since the DB stores meals as separate rows, we need to aggregate them
         List<MealDetail> meals = planData.map((m) {
           return MealDetail(
-            type: m['meal_type'],
-            name: m['meal_name'],
-            ingredients: [], // Ingredients might not be stored separately in this schema
-            calories: (m['calories'] as num).toDouble(),
+            type: m['meal_type'] ?? "Meal",
+            name: m['meal_name'] ?? "Unknown",
+            ingredients: [],
+            calories: (m['calories'] as num?)?.toDouble() ?? 0.0,
             macros: Macros(
-              protein: (m['protein'] as num).toDouble(),
-              carbs: (m['carbs'] as num).toDouble(),
-              fats: (m['fat'] as num).toDouble(),
+              protein: (m['protein'] as num?)?.toDouble() ?? 0.0,
+              carbs: (m['carbs'] as num?)?.toDouble() ?? 0.0,
+              fats: (m['fat'] as num?)?.toDouble() ?? 0.0,
             ),
           );
         }).toList();
@@ -48,16 +46,14 @@ class NutritionCubit extends Cubit<NutritionState> {
         final plan = NutritionPlanModel(
           meals: meals,
           totalMacros: Macros(
-            protein: meals.fold(0, (sum, item) => sum + item.macros.protein),
-            carbs: meals.fold(0, (sum, item) => sum + item.macros.carbs),
-            fats: meals.fold(0, (sum, item) => sum + item.macros.fats),
+            protein: meals.fold(0.0, (sum, item) => sum + item.macros.protein),
+            carbs: meals.fold(0.0, (sum, item) => sum + item.macros.carbs),
+            fats: meals.fold(0.0, (sum, item) => sum + item.macros.fats),
           ),
           objective: "Your Saved Diet Plan",
         );
         emit(NutritionSuccess(plan));
       } else {
-        // If no plan exists, we can either generate one or let the user decide
-        // For now, let's just emit Initial so the UI can show a generate button or auto-generate
         emit(NutritionInitial());
       }
     } catch (e) {
@@ -79,7 +75,6 @@ class NutritionCubit extends Cubit<NutritionState> {
         return;
       }
 
-      // Fetch user profile from Supabase
       final profileData = await getDataWithSpacificId(
         tableName: 'user_profiles',
         id: user.id,
@@ -92,7 +87,6 @@ class NutritionCubit extends Cubit<NutritionState> {
 
       final userModel = UserModel.fromJson(profileData.first);
 
-      // Call Gemini API with real user data and preferences
       final plan = await service.generateDietPlan(
         age: userModel.age ?? 25,
         weight: userModel.weight ?? 70.0,
@@ -117,32 +111,34 @@ class NutritionCubit extends Cubit<NutritionState> {
     emit(NutritionSaving());
 
     try {
-      // First, remove the old plan
-      await removeData(
-        tableName: 'nutrition_plans',
-        data: {'user_id': user.id},
-      );
+      // 1. Remove old plan
+      await getIt<SupabaseClient>()
+          .from('nutrition_plans')
+          .delete()
+          .eq('user_id', user.id);
 
-      // Then save the new meals
-      for (var meal in plan.meals) {
-        await addData(
-          tableName: 'nutrition_plans',
-          data: {
-            'user_id': user.id,
-            'meal_type': meal.type,
-            'meal_name': meal.name,
-            'calories': meal.calories,
-            'protein': meal.macros.protein,
-            'carbs': meal.macros.carbs,
-            'fat': meal.macros.fats,
-          },
-        );
-      }
+      // 2. Prepare batch data
+      final List<Map<String, dynamic>> mealsData = plan.meals
+          .map(
+            (meal) => {
+              'user_id': user.id,
+              'meal_type': meal.type,
+              'meal_name': meal.name,
+              'calories': meal.calories,
+              'protein': meal.macros.protein,
+              'carbs': meal.macros.carbs,
+              'fat': meal.macros.fats,
+            },
+          )
+          .toList();
+
+      // 3. Direct Insert
+      await getIt<SupabaseClient>().from('nutrition_plans').insert(mealsData);
+
       emit(NutritionSaveSuccess());
-      // Re-emit success with the plan to keep the UI showing the plan
       emit(NutritionSuccess(plan));
     } catch (e) {
-      emit(NutritionFailure("Failed to save plan: $e"));
+      emit(NutritionFailure("Save Error: $e"));
       emit(NutritionSuccess(plan));
     }
   }
@@ -170,4 +166,3 @@ class NutritionCubit extends Cubit<NutritionState> {
     }
   }
 }
-

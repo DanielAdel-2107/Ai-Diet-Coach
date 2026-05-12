@@ -44,7 +44,6 @@ class DashboardCubit extends Cubit<DashboardState> {
             .from('nutrition_plans')
             .select('meal_name')
             .eq('user_id', user.id)
-            .eq('day_of_week', dayOfWeek)
             .limit(1)
             .maybeSingle(),
         _supabase

@@ -1,4 +1,5 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:custom_quick_alert/custom_quick_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:ai_diet_coach/features/patient/workout_plan/view_models/workout_plan_cubit/workout_plan_cubit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,46 +24,73 @@ class DayExerciseCard extends StatelessWidget {
       delay: Duration(milliseconds: 50 * index),
       child: Container(
         margin: EdgeInsets.only(bottom: SizeConfig.height * 0.015),
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(SizeConfig.width * 0.04),
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppColors.border.withOpacity(0.5), width: 1.5),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: AppColors.border.withOpacity(0.5),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
           children: [
             _buildPlayThumbnail(),
-            const SizedBox(width: 16),
-            Expanded(child: _buildExerciseInfo()),
-            _buildIntensityBadge(),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: () {
-                context.read<WorkoutPlanCubit>().completeExercise(exercise);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Logged: ${exercise.name}"),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: Colors.green,
+            SizedBox(width: SizeConfig.width * 0.04),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: _buildExerciseInfo()),
+                      _buildIntensityBadge(),
+                    ],
                   ),
-                );
-              },
-              icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.green),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.green.withOpacity(0.1),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  SizedBox(height: SizeConfig.height * 0.01),
+                  _buildActions(context),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(child: _buildExerciseStats()),
+        IconButton(
+          onPressed: () {
+            context.read<WorkoutPlanCubit>().completeExercise(exercise);
+            CustomQuickAlert.success(message: "Completed: ${exercise.name}");
+          },
+          icon: const Icon(
+            Icons.check_circle_rounded,
+            color: Colors.green,
+            size: 24,
+          ),
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.green.withOpacity(0.1),
+            padding: const EdgeInsets.all(8),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -98,7 +126,11 @@ class DayExerciseCard extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
+            child: const Icon(
+              Icons.play_arrow_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
         ],
       ),
@@ -106,23 +138,32 @@ class DayExerciseCard extends StatelessWidget {
   }
 
   Widget _buildExerciseInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Text(
+      exercise.name,
+      style: AppTextStyles.title16BlackBold.copyWith(
+        fontSize: 18,
+        letterSpacing: -0.2,
+        color: AppColors.textPrimary,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  Widget _buildExerciseStats() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        Text(
-          exercise.name,
-          style: AppTextStyles.title16BlackBold.copyWith(fontSize: 18, letterSpacing: -0.2),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        _buildDetailTip(
+          Icons.repeat_rounded,
+          "${exercise.sets} Sets",
+          AppColors.secondary,
         ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _buildDetailTip(Icons.repeat_rounded, "${exercise.sets} Sets", AppColors.secondary),
-            _buildDetailTip(Icons.fitness_center_rounded, "${exercise.reps} Reps", AppColors.chartOrange),
-          ],
+        _buildDetailTip(
+          Icons.fitness_center_rounded,
+          "${exercise.reps} Reps",
+          AppColors.chartOrange,
         ),
       ],
     );
@@ -142,7 +183,11 @@ class DayExerciseCard extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             text,
-            style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -162,9 +207,12 @@ class DayExerciseCard extends StatelessWidget {
 
   Color _getIntensityColor() {
     switch (exercise.intensity.toLowerCase()) {
-      case 'high': return Colors.redAccent;
-      case 'moderate': return Colors.orangeAccent;
-      default: return AppColors.primary;
+      case 'high':
+        return Colors.redAccent;
+      case 'moderate':
+        return Colors.orangeAccent;
+      default:
+        return AppColors.primary;
     }
   }
 }
