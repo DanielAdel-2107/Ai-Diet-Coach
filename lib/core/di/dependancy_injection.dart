@@ -15,6 +15,6 @@ Future<void> setupDI() async {
 
   // Register Gemini Service
   getIt.registerLazySingleton<GeminiService>(
-    () => GeminiService(apiKey: "[GCP_API_KEY]"),
+    () => GeminiService(apiKey: "AIzaSyAC__g_OzRh1iWkt2gCwmzW50LKBwN9-Wc"),
   );
 }

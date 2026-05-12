@@ -1,7 +1,7 @@
 import 'package:animate_do/animate_do.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
 import 'package:ai_diet_coach/features/patient/reminders/models/reminder_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -87,7 +87,7 @@ class ReminderCard extends StatelessWidget {
             CupertinoSwitch(
               value: reminder.isEnabled,
               onChanged: onToggle,
-              activeColor: reminder.color,
+              activeTrackColor: reminder.color,
             ),
           ],
         ),

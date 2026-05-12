@@ -1,7 +1,8 @@
 import 'package:ai_diet_coach/core/components/custom_app_bar.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/features/patient/analytics/views/widgets/log_entry_dialog.dart';
 import 'package:ai_diet_coach/features/patient/progress/models/progress_models.dart';
 import 'package:ai_diet_coach/features/patient/progress/view_models/progress_cubit/progress_cubit.dart';
 import 'package:ai_diet_coach/features/patient/progress/view_models/progress_cubit/progress_state.dart';
@@ -11,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:custom_quick_alert/custom_quick_alert.dart';
-import 'package:intl/intl.dart';
 
 class ProgressBody extends StatelessWidget {
   const ProgressBody({super.key});
@@ -19,11 +19,11 @@ class ProgressBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
-    return Container(
-      color: AppColors.background,
-      child: Column(
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Column(
         children: [
-          const CustomAppBar(shopName: "My Progress"),
+          const CustomAppBar(title: "My Progress"),
           Expanded(
             child: BlocBuilder<ProgressCubit, ProgressState>(
               builder: (context, state) {
@@ -43,6 +43,7 @@ class ProgressBody extends StatelessWidget {
                           SizedBox(height: SizeConfig.height * 0.04),
                           _buildWeightChart(state.weightLogs),
                           _buildCalorieChart(state.calorieLogs),
+                          _buildWorkoutChart(state.workoutLogs),
                           _buildSugarChart(state.sugarLogs),
                           SizedBox(height: SizeConfig.height * 0.05),
                         ],
@@ -50,14 +51,25 @@ class ProgressBody extends StatelessWidget {
                     ),
                   );
                 } else if (state is ProgressError) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    CustomQuickAlert.error(message: state.message);
+                  });
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(state.message, style: AppTextStyles.title16Grey),
+                        Icon(Icons.error_outline, size: 48, color: Colors.red.withOpacity(0.5)),
+                        SizedBox(height: SizeConfig.height * 0.02),
+                        Text("Oops! Something went wrong", style: AppTextStyles.title18BlackBold),
+                        SizedBox(height: SizeConfig.height * 0.01),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(state.message, textAlign: TextAlign.center, style: AppTextStyles.title14Grey),
+                        ),
                         ElevatedButton(
                           onPressed: () => context.read<ProgressCubit>().fetchProgressData(),
-                          child: const Text("Retry"),
+                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                          child: const Text("Retry Connection", style: TextStyle(color: Colors.white)),
                         ),
                       ],
                     ),
@@ -69,6 +81,35 @@ class ProgressBody extends StatelessWidget {
           ),
         ],
       ),
+      floatingActionButton: _buildMultiFloatingActionButton(context),
+    );
+  }
+
+  Widget _buildMultiFloatingActionButton(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        FloatingActionButton.small(
+          heroTag: "sugar",
+          onPressed: () => _showAddSugarDialog(context),
+          backgroundColor: AppColors.accent,
+          child: const Icon(Icons.bloodtype_rounded, color: Colors.white),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton.small(
+          heroTag: "calorie",
+          onPressed: () => _showAddCalorieDialog(context),
+          backgroundColor: AppColors.secondary,
+          child: const Icon(Icons.fastfood_rounded, color: Colors.white),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton(
+          heroTag: "weight",
+          onPressed: () => _showAddWeightDialog(context),
+          backgroundColor: AppColors.primary,
+          child: const Icon(Icons.scale_rounded, color: Colors.white),
+        ),
+      ],
     );
   }
 
@@ -98,6 +139,14 @@ class ProgressBody extends StatelessWidget {
             AppColors.accent,
             Icons.bloodtype_rounded,
             AppColors.accent,
+          ),
+          _buildSummaryCard(
+            "Active Burn",
+            "${state.totalCaloriesBurned.toInt()} kcal",
+            "Burned today",
+            Colors.orange,
+            Icons.local_fire_department_rounded,
+            Colors.orange,
           ),
         ],
       ),
@@ -327,6 +376,93 @@ class ProgressBody extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildWorkoutChart(List<WorkoutLogModel> logs) {
+    if (logs.isEmpty) return _buildEmptyChart("Workout");
+
+    final spots = logs.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value.caloriesBurned);
+    }).toList();
+
+    return ProgressChartCard(
+      title: "Exercise Burn",
+      subtitle: "Calories burned during activities",
+      themeColor: Colors.orange,
+      chart: LineChart(
+        LineChartData(
+          gridData: const FlGridData(show: false),
+          titlesData: const FlTitlesData(show: false),
+          borderData: FlBorderData(show: false),
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              color: Colors.orange,
+              barWidth: 4,
+              belowBarData: BarAreaData(
+                show: true,
+                color: Colors.orange.withOpacity(0.1),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddWeightDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => LogEntryDialog(
+        title: "Log Weight",
+        label: "Weight (kg)",
+        hint: "Enter your current weight",
+        icon: Icons.scale_rounded,
+        onSave: (val) {
+          final weight = double.tryParse(val);
+          if (weight != null) {
+            context.read<ProgressCubit>().logWeight(weight);
+          }
+        },
+      ),
+    );
+  }
+
+  void _showAddCalorieDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => LogEntryDialog(
+        title: "Log Calories",
+        label: "Calories (kcal)",
+        hint: "Enter calories consumed",
+        icon: Icons.fastfood_rounded,
+        onSave: (val) {
+          final calories = int.tryParse(val);
+          if (calories != null) {
+            context.read<ProgressCubit>().logCalorie(calories);
+          }
+        },
+      ),
+    );
+  }
+
+  void _showAddSugarDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => LogEntryDialog(
+        title: "Log Sugar",
+        label: "Level (mg/dL)",
+        hint: "Enter blood sugar level",
+        icon: Icons.bloodtype_rounded,
+        onSave: (val) {
+          final level = double.tryParse(val);
+          if (level != null) {
+            context.read<ProgressCubit>().logSugar(level, "Manual Log");
+          }
+        },
       ),
     );
   }

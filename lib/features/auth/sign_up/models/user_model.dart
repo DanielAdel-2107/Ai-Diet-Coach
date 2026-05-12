@@ -10,6 +10,10 @@ class UserModel {
   final String? activityLevel;
   final double? bmi;
 
+  final List<String>? likedFoods;
+  final List<String>? dislikedFoods;
+  final List<String>? allergies;
+
   UserModel({
     required this.id,
     required this.name,
@@ -21,6 +25,9 @@ class UserModel {
     this.goal,
     this.activityLevel,
     this.bmi,
+    this.likedFoods,
+    this.dislikedFoods,
+    this.allergies,
   });
 
   Map<String, dynamic> toJson() {
@@ -35,6 +42,9 @@ class UserModel {
       'goal': goal,
       'activity_level': activityLevel,
       'bmi': bmi,
+      'liked_foods': likedFoods,
+      'disliked_foods': dislikedFoods,
+      'allergies': allergies,
       'updated_at': DateTime.now().toIso8601String(),
     };
   }
@@ -51,6 +61,15 @@ class UserModel {
       goal: json['goal'],
       activityLevel: json['activity_level'],
       bmi: json['bmi']?.toDouble(),
+      likedFoods: (json['liked_foods'] as List?)
+          ?.map((e) => e.toString())
+          .toList(),
+      dislikedFoods: (json['disliked_foods'] as List?)
+          ?.map((e) => e.toString())
+          .toList(),
+      allergies: (json['allergies'] as List?)
+          ?.map((e) => e.toString())
+          .toList(),
     );
   }
 }

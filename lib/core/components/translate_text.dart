@@ -1,7 +1,7 @@
 // import 'package:flutter/material.dart';
 // import 'package:ai_diet_coach/core/di/dependancy_injection.dart';
 // import 'package:ai_diet_coach/core/helper/translation_services.dart';
-// import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
+// import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
 
 // class TranslateText extends StatelessWidget {
 //   const TranslateText({

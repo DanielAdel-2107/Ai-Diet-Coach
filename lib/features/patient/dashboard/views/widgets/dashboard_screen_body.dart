@@ -2,9 +2,9 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ai_diet_coach/core/app_route/route_names.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:ai_diet_coach/features/patient/dashboard/view_models/dashboard_cubit/dashboard_cubit.dart';
 import 'package:ai_diet_coach/features/patient/dashboard/view_models/dashboard_cubit/dashboard_state.dart';
 import 'package:ai_diet_coach/features/patient/dashboard/views/widgets/stats_grid.dart';
@@ -78,9 +78,18 @@ class PatientDashboardScreenBody extends StatelessWidget {
                             ),
                             SizedBox(height: SizeConfig.height * 0.04),
                             QuickActionsSection(
-                              onScan: () => Navigator.pushNamed(context, RouteNames.foodScannerScreen),
-                              onAddMeal: () => Navigator.pushNamed(context, RouteNames.savedMealsScreen),
-                              onStartWorkout: () => Navigator.pushNamed(context, RouteNames.workoutScreen),
+                              onScan: () async {
+                                await Navigator.pushNamed(context, RouteNames.foodScannerScreen);
+                                if (context.mounted) context.read<DashboardCubit>().refresh();
+                              },
+                              onAddMeal: () async {
+                                await Navigator.pushNamed(context, RouteNames.savedMealsScreen);
+                                if (context.mounted) context.read<DashboardCubit>().refresh();
+                              },
+                              onStartWorkout: () async {
+                                await Navigator.pushNamed(context, RouteNames.workoutScreen);
+                                if (context.mounted) context.read<DashboardCubit>().refresh();
+                              },
                             ),
                             SizedBox(height: SizeConfig.height * 0.04),
                             Padding(

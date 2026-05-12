@@ -15,36 +15,22 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) throw Exception("User not logged in");
 
-      // Fetch Weight Logs
-      final weightResponse = await _supabase
-          .from('weight_logs')
-          .select()
-          .eq('user_id', userId)
-          .order('created_at', ascending: true);
+      // Fetch all logs in parallel for better performance
+      final results = await Future.wait([
+        _supabase.from('weight_logs').select().eq('user_id', userId).order('created_at', ascending: true),
+        _supabase.from('calorie_logs').select().eq('user_id', userId).order('created_at', ascending: true),
+        _supabase.from('sugar_levels').select().eq('user_id', userId).order('created_at', ascending: true),
+      ]);
 
-      final weightLogs = (weightResponse as List)
+      final weightLogs = (results[0] as List)
           .map((json) => WeightLogModel.fromJson(json))
           .toList();
 
-      // Fetch Calorie Logs
-      final calorieResponse = await _supabase
-          .from('calorie_logs')
-          .select()
-          .eq('user_id', userId)
-          .order('created_at', ascending: true);
-
-      final calorieLogs = (calorieResponse as List)
+      final calorieLogs = (results[1] as List)
           .map((json) => CalorieLogModel.fromJson(json))
           .toList();
 
-      // Fetch Sugar Levels
-      final sugarResponse = await _supabase
-          .from('sugar_levels')
-          .select()
-          .eq('user_id', userId)
-          .order('created_at', ascending: true);
-
-      final sugarLogs = (sugarResponse as List)
+      final sugarLogs = (results[2] as List)
           .map((json) => SugarLevelModel.fromJson(json))
           .toList();
 
@@ -54,7 +40,7 @@ class AnalyticsCubit extends Cubit<AnalyticsState> {
         sugarLogs: sugarLogs,
       ));
     } catch (e) {
-      emit(AnalyticsError("Failed to fetch analytics: ${e.toString()}"));
+      emit(AnalyticsError("Connection Error: ${e.toString()}"));
     }
   }
 

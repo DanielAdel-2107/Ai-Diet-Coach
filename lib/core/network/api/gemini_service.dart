@@ -46,14 +46,26 @@ class GeminiService {
     required double height,
     required String goal,
     String? healthCondition,
+    List<String>? likedFoods,
+    List<String>? dislikedFoods,
+    List<String>? allergies,
+    String? additionalNotes,
   }) async {
-    final prompt =
-        '''
-Generate a personalized nutrition plan for:
+    final prompt = '''
+Generate a highly personalized and unique nutrition plan for:
 - Age: $age years, Weight: $weight kg, Height: $height cm, Goal: $goal
 ${healthCondition != null ? '- Health Condition: $healthCondition' : ''}
-Provide exactly 4 meals: Breakfast, Lunch, Dinner, and 1 Snack.
-Return ONLY valid JSON.
+${likedFoods != null && likedFoods.isNotEmpty ? '- Liked Foods (Include these): ${likedFoods.join(", ")}' : ''}
+${dislikedFoods != null && dislikedFoods.isNotEmpty ? '- Disliked Foods (Avoid these): ${dislikedFoods.join(", ")}' : ''}
+${allergies != null && allergies.isNotEmpty ? '- Allergies (MUST AVOID): ${allergies.join(", ")}' : ''}
+${additionalNotes != null && additionalNotes.isNotEmpty ? '- Additional Preferences: $additionalNotes' : ''}
+
+Important: 
+- Provide exactly 4 meals: Breakfast, Lunch, Dinner, and 1 Snack.
+- Make the plan creative and diverse. 
+- Do not repeat the same meals every time. 
+- Consider the timestamp: ${DateTime.now().toIso8601String()} to provide a fresh variety.
+- Return ONLY valid JSON.
 ''';
 
     final response = await _proModel.generateContent(
@@ -61,7 +73,7 @@ Return ONLY valid JSON.
       generationConfig: GenerationConfig(
         responseMimeType: 'application/json',
         responseSchema: _nutritionSchema,
-        temperature: 0.2,
+        temperature: 0.4,
       ),
     );
 
@@ -78,11 +90,14 @@ Return ONLY valid JSON.
     required double height,
     required String goal,
   }) async {
-    final prompt =
-        '''
+    final prompt = '''
 Generate a 7-day personalized workout plan for:
 - Age: $age, Weight: $weight kg, Height: $height cm, Goal: $goal
-Important: You MUST name the 7 days exactly as "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" in the 'day' field.
+Important: 
+- You MUST name the 7 days exactly as "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" in the 'day' field.
+- Make the plan creative and diverse. 
+- Do not repeat the same exercises every time. 
+- Consider the timestamp: ${DateTime.now().toIso8601String()} to provide a fresh variety.
 Return ONLY valid JSON.
 ''';
 
@@ -91,7 +106,39 @@ Return ONLY valid JSON.
       generationConfig: GenerationConfig(
         responseMimeType: 'application/json',
         responseSchema: _workoutSchema,
-        temperature: 0.2,
+        temperature: 0.4,
+      ),
+    );
+
+    final text = response.text;
+    if (text == null || text.isEmpty)
+      throw Exception("Empty response from Gemini");
+    return WorkoutPlanModel.fromJson(jsonDecode(text));
+  }
+
+  Future<WorkoutPlanModel> modifyWorkoutPlan({
+    required WorkoutPlanModel currentPlan,
+    required String userMessage,
+  }) async {
+    final prompt = '''
+Current Workout Plan:
+${jsonEncode(currentPlan.toJson())}
+
+User Request: "$userMessage"
+
+Based on the current plan and the user's request, modify the plan and return the full updated 7-day workout plan.
+Important:
+- Keep the same JSON structure.
+- Only change what is necessary based on the user's request.
+- Return ONLY valid JSON.
+''';
+
+    final response = await _proModel.generateContent(
+      [Content.text(prompt)],
+      generationConfig: GenerationConfig(
+        responseMimeType: 'application/json',
+        responseSchema: _workoutSchema,
+        temperature: 0.3,
       ),
     );
 

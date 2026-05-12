@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:ai_diet_coach/core/network/bluetooth/bluetooth_service.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 import 'package:ai_diet_coach/features/patient/sugar_device/models/sugar_device_model.dart';
 import 'package:ai_diet_coach/features/patient/sugar_device/view_models/sugar_device_cubit/sugar_device_state.dart';
 import 'package:ai_diet_coach/features/patient/sugar_tracking/models/sugar_level_model.dart';

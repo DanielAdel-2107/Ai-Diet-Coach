@@ -1,8 +1,8 @@
 import 'package:ai_diet_coach/core/components/custom_elevated_button.dart';
 import 'package:ai_diet_coach/core/components/custom_text_form_field.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
 import 'package:ai_diet_coach/core/app_route/route_names.dart';
 import 'package:ai_diet_coach/features/auth/sign_in/view_models/cubit/sign_in_cubit.dart';
 import 'package:ai_diet_coach/features/auth/sign_in/view_models/cubit/sign_in_state.dart';

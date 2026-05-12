@@ -1,6 +1,6 @@
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
 import 'package:ai_diet_coach/features/patient/analytics/models/analytics_models.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -83,10 +83,10 @@ class CalorieChart extends StatelessWidget {
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                   ),
-                  width: 16,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(6),
-                    topRight: Radius.circular(6),
+                  width: SizeConfig.width * 0.04,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(SizeConfig.width * 0.015),
+                    topRight: Radius.circular(SizeConfig.width * 0.015),
                   ),
                 ),
               ],

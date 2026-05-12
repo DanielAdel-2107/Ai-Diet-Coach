@@ -1,4 +1,4 @@
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:flutter/material.dart';
 
 class CustomTextButtonWithIcon extends StatelessWidget {

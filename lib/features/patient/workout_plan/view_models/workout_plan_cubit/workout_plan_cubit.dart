@@ -122,15 +122,64 @@ class WorkoutPlanCubit extends Cubit<WorkoutPlanState> {
         height: height,
         goal: goal,
       );
-      
+
       final user = _supabase.auth.currentUser;
       if (user != null) {
         await _savePlanToSupabase(user.id, plan);
       }
-      
+
       emit(WorkoutPlanLoaded(plan));
     } catch (e) {
       emit(WorkoutPlanFailure(e.toString()));
+    }
+  }
+
+  // --- AI Modification via Chat ---
+  Future<void> modifyPlan(String userMessage) async {
+    if (state is! WorkoutPlanLoaded) return;
+    final currentPlan = (state as WorkoutPlanLoaded).plan;
+    final currentIndex = (state as WorkoutPlanLoaded).selectedDayIndex;
+
+    emit(WorkoutPlanLoading());
+    try {
+      final modifiedPlan = await service.modifyWorkoutPlan(
+        currentPlan: currentPlan,
+        userMessage: userMessage,
+      );
+
+      final user = _supabase.auth.currentUser;
+      if (user != null) {
+        await _savePlanToSupabase(user.id, modifiedPlan);
+      }
+
+      emit(WorkoutPlanLoaded(modifiedPlan, selectedDayIndex: currentIndex));
+    } catch (e) {
+      emit(WorkoutPlanFailure("Modification failed: ${e.toString()}"));
+      emit(WorkoutPlanLoaded(currentPlan, selectedDayIndex: currentIndex));
+    }
+  }
+
+  // --- Track Completed Exercises ---
+  Future<void> completeExercise(ExercisePlan exercise) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      // Estimate calories burned based on intensity
+      int caloriesBurned = 20; // Default
+      if (exercise.intensity.toLowerCase() == 'high') caloriesBurned = 50;
+      if (exercise.intensity.toLowerCase() == 'moderate') caloriesBurned = 35;
+
+      await _supabase.from('workout_logs').insert({
+        'user_id': user.id,
+        'exercise_name': exercise.name,
+        'calories_burned': caloriesBurned,
+        'completed_at': DateTime.now().toIso8601String(),
+      });
+      
+      // Optional: Show success feedback if needed
+    } catch (e) {
+      print("Failed to log workout: $e");
     }
   }
 }

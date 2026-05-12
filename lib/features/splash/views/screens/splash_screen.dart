@@ -1,11 +1,13 @@
 import 'dart:async';
 
-import 'package:ai_diet_coach/core/utilies/assets/images/app_images.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/assets/images/app_images.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
 import 'package:ai_diet_coach/core/app_route/route_names.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -37,9 +39,20 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    Timer(const Duration(seconds: 3), () {
+    Timer(const Duration(seconds: 3), () async {
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, RouteNames.onBoardingScreen);
+
+      final prefs = await SharedPreferences.getInstance();
+      final bool onboardingSeen = prefs.getBool('onboarding_seen') ?? false;
+      final user = Supabase.instance.client.auth.currentUser;
+
+      if (user != null) {
+        Navigator.pushReplacementNamed(context, RouteNames.dashboardScreen);
+      } else if (onboardingSeen) {
+        Navigator.pushReplacementNamed(context, RouteNames.signInScreen);
+      } else {
+        Navigator.pushReplacementNamed(context, RouteNames.onBoardingScreen);
+      }
     });
   }
 

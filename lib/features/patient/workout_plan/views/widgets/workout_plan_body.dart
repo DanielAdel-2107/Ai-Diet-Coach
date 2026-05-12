@@ -2,20 +2,33 @@ import 'package:animate_do/animate_do.dart';
 import 'package:custom_quick_alert/custom_quick_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:ai_diet_coach/features/patient/workout_plan/view_models/workout_plan_cubit/workout_plan_cubit.dart';
 import 'package:ai_diet_coach/features/patient/workout_plan/view_models/workout_plan_cubit/workout_plan_state.dart';
 import 'package:ai_diet_coach/features/patient/workout_plan/views/widgets/day_exercise_card.dart';
 
-class WorkoutPlanBody extends StatelessWidget {
+class WorkoutPlanBody extends StatefulWidget {
   const WorkoutPlanBody({super.key});
+
+  @override
+  State<WorkoutPlanBody> createState() => _WorkoutPlanBodyState();
+}
+
+class _WorkoutPlanBodyState extends State<WorkoutPlanBody> {
+  final TextEditingController _chatController = TextEditingController();
+
+  @override
+  void dispose() {
+    _chatController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     SizeConfig.init(context);
-    
+
     return BlocConsumer<WorkoutPlanCubit, WorkoutPlanState>(
       listener: (context, state) {
         if (state is WorkoutPlanFailure) {
@@ -60,6 +73,7 @@ class WorkoutPlanBody extends StatelessWidget {
                         state.plan.days[state.selectedDayIndex],
                       ),
                     ),
+                    _buildChatInput(context),
                   ] else if (state is WorkoutPlanLoading) ...[
                     Expanded(child: _buildLoadingState()),
                   ] else ...[
@@ -86,33 +100,39 @@ class WorkoutPlanBody extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.card,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.card,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                        padding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                    SizedBox(width: SizeConfig.width * 0.04),
+                    Expanded(
+                      child: Text(
+                        "Workout Plan",
+                        style: AppTextStyles.title26BlackBold.copyWith(
+                          letterSpacing: -0.5,
                         ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    child: IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                      padding: const EdgeInsets.all(12),
-                    ),
-                  ),
-                  SizedBox(width: SizeConfig.width * 0.04),
-                  Text(
-                    "Workout Plan",
-                    style: AppTextStyles.title26BlackBold.copyWith(
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               if (state is WorkoutPlanLoaded)
                 IconButton(
@@ -553,6 +573,72 @@ class WorkoutPlanBody extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChatInput(BuildContext context) {
+    return FadeInUp(
+      child: Container(
+        padding: EdgeInsets.all(SizeConfig.width * 0.04),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                ),
+                child: TextField(
+                  controller: _chatController,
+                  style: AppTextStyles.title14BlackColorW600,
+                  decoration: InputDecoration(
+                    hintText: "Ask AI to change something...",
+                    hintStyle: AppTextStyles.title14Grey,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            GestureDetector(
+              onTap: () {
+                if (_chatController.text.trim().isNotEmpty) {
+                  context.read<WorkoutPlanCubit>().modifyPlan(_chatController.text.trim());
+                  _chatController.clear();
+                  FocusScope.of(context).unfocus();
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.textPrimary,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.textPrimary.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

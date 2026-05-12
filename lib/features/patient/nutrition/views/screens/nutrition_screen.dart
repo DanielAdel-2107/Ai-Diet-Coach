@@ -11,7 +11,7 @@ class PatientNutritionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => NutritionCubit(getIt<GeminiService>())..generatePlan(),
+      create: (context) => NutritionCubit(getIt<GeminiService>())..fetchPlan(),
       child: const Scaffold(body: PatientNutritionScreenBody()),
     );
   }

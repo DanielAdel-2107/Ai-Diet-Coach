@@ -1,14 +1,14 @@
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
-    required this.shopName,
+    required this.title,
     this.actions,
   });
 
-  final String shopName;
+  final String title;
   final List<Widget>? actions;
 
   @override
@@ -20,13 +20,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
         onPressed: () => Navigator.pop(context),
       ),
-      title: Text(shopName, style: AppTextStyles.title20BlackW600),
+      title: Text(title, style: AppTextStyles.title20BlackW600),
       centerTitle: true,
       actions: actions,
     );
   }
   
   @override
-  // TODO: implement preferredSize
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

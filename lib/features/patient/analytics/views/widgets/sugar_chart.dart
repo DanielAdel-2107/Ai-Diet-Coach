@@ -1,21 +1,21 @@
 import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
 import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
-import 'package:ai_diet_coach/features/patient/analytics/models/analytics_models.dart';
+import 'package:ai_diet_coach/features/patient/sugar_tracking/models/sugar_level_model.dart';
 import "package:fl_chart/fl_chart.dart";
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class WeightChart extends StatelessWidget {
-  final List<WeightLogModel> logs;
+class SugarChart extends StatelessWidget {
+  final List<SugarLevelModel> logs;
 
-  const WeightChart({super.key, required this.logs});
+  const SugarChart({super.key, required this.logs});
 
   @override
   Widget build(BuildContext context) {
     if (logs.isEmpty) {
       return Center(
-        child: Text("No weight data found", style: AppTextStyles.title14Grey),
+        child: Text("No sugar level data found", style: AppTextStyles.title14Grey),
       );
     }
 
@@ -66,11 +66,11 @@ class WeightChart extends StatelessWidget {
           lineBarsData: [
             LineChartBarData(
               spots: logs.asMap().entries.map((e) {
-                return FlSpot(e.key.toDouble(), e.value.weight);
+                return FlSpot(e.key.toDouble(), e.value.level);
               }).toList(),
               isCurved: true,
-              gradient: LinearGradient(
-                colors: [AppColors.secondary, AppColors.secondaryLight],
+              gradient: const LinearGradient(
+                colors: [Colors.redAccent, Colors.orangeAccent],
               ),
               barWidth: 4,
               isStrokeCapRound: true,
@@ -79,8 +79,8 @@ class WeightChart extends StatelessWidget {
                 show: true,
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.secondary.withOpacity(0.3),
-                    AppColors.secondary.withOpacity(0.0),
+                    Colors.redAccent.withOpacity(0.3),
+                    Colors.redAccent.withOpacity(0.0),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,

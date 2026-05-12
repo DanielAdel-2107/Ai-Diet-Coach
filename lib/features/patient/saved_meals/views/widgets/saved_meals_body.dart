@@ -1,9 +1,9 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:ai_diet_coach/features/patient/saved_meals/models/saved_meal_model.dart';
 import 'package:ai_diet_coach/features/patient/saved_meals/view_models/saved_meals_cubit/saved_meals_cubit.dart';
 import 'package:ai_diet_coach/features/patient/saved_meals/view_models/saved_meals_cubit/saved_meals_state.dart';

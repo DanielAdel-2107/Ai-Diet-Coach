@@ -1,5 +1,5 @@
 // ignore_for_file: deprecated_member_use
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:ai_diet_coach/core/app_route/route_names.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';

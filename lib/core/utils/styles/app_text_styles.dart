@@ -1,6 +1,6 @@
 import 'package:ai_diet_coach/core/helper/get_responsive_font_size.dart';
 import 'package:flutter/material.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
 
 class AppTextStyles {
   static TextStyle title20WhiteW500 = TextStyle(

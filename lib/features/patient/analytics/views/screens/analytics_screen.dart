@@ -1,3 +1,4 @@
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:ai_diet_coach/features/patient/analytics/view_models/analytics_cubit/analytics_cubit.dart';
 import 'package:ai_diet_coach/features/patient/analytics/views/widgets/analytics_body.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ class AnalyticsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig.init(context);
     return BlocProvider(
       create: (context) => AnalyticsCubit(GetIt.I<SupabaseClient>())..fetchAnalyticsData(),
       child: const Scaffold(

@@ -1,11 +1,14 @@
 import 'package:ai_diet_coach/core/components/custom_app_bar.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
 import 'package:ai_diet_coach/features/patient/analytics/view_models/analytics_cubit/analytics_cubit.dart';
 import 'package:ai_diet_coach/features/patient/analytics/view_models/analytics_cubit/analytics_state.dart';
 import 'package:ai_diet_coach/features/patient/analytics/views/widgets/calorie_chart.dart';
+import 'package:ai_diet_coach/features/patient/analytics/views/widgets/log_entry_dialog.dart';
+import 'package:ai_diet_coach/features/patient/analytics/views/widgets/sugar_chart.dart';
 import 'package:ai_diet_coach/features/patient/analytics/views/widgets/weight_chart.dart';
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:custom_quick_alert/custom_quick_alert.dart';
@@ -17,7 +20,7 @@ class AnalyticsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const CustomAppBar(shopName: "Health Analytics"),
+        const CustomAppBar(title: "Health Analytics"),
         Expanded(
           child: BlocBuilder<AnalyticsCubit, AnalyticsState>(
             builder: (context, state) {
@@ -35,21 +38,46 @@ class AnalyticsBody extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionHeader("Weight Progress"),
+                        FadeInDown(child: _buildSectionHeader("Weight Progress")),
                         SizedBox(height: SizeConfig.height * 0.02),
-                        WeightChart(logs: state.weightLogs),
+                        FadeInRight(child: WeightChart(logs: state.weightLogs)),
                         SizedBox(height: SizeConfig.height * 0.04),
-                        _buildSectionHeader("Daily Calorie Intake"),
+                        
+                        FadeInDown(child: _buildSectionHeader("Daily Calorie Intake")),
                         SizedBox(height: SizeConfig.height * 0.02),
-                        CalorieChart(logs: state.calorieLogs),
+                        FadeInRight(child: CalorieChart(logs: state.calorieLogs)),
                         SizedBox(height: SizeConfig.height * 0.04),
-                        _buildLoggingActions(context),
+
+                        FadeInDown(child: _buildSectionHeader("Blood Sugar Levels")),
+                        SizedBox(height: SizeConfig.height * 0.02),
+                        FadeInRight(child: SugarChart(logs: state.sugarLogs)),
+                        SizedBox(height: SizeConfig.height * 0.04),
+                        
+                        FadeInUp(child: _buildLoggingActions(context)),
+                        SizedBox(height: SizeConfig.height * 0.04),
                       ],
                     ),
                   ),
                 );
               } else if (state is AnalyticsError) {
-                return Center(child: Text(state.message));
+                // Use CustomQuickAlert for errors as per rules
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                   CustomQuickAlert.error(message: state.message);
+                });
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(state.message, textAlign: TextAlign.center),
+                      TextButton(
+                        onPressed: () => context.read<AnalyticsCubit>().fetchAnalyticsData(),
+                        child: const Text("Retry"),
+                      )
+                    ],
+                  ),
+                );
               }
               return const SizedBox.shrink();
             },
@@ -96,55 +124,73 @@ class AnalyticsBody extends StatelessWidget {
     Color color,
     VoidCallback onTap,
   ) {
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, color: Colors.white, size: 20),
-      label: Text(
-        title,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(SizeConfig.width * 0.04),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 0,
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, color: Colors.white, size: SizeConfig.width * 0.05),
+        label: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: SizeConfig.width * 0.035,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: EdgeInsets.symmetric(vertical: SizeConfig.height * 0.02),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(SizeConfig.width * 0.04),
+          ),
+          elevation: 0,
+        ),
       ),
     );
   }
 
   void _showWeightDialog(BuildContext context) {
-    final controller = TextEditingController();
-    CustomQuickAlert.confirm(
-      title: "Log Weight",
-      message: "Enter your current weight in kg:",
-      confirmText: "Save",
-      onConfirm: () {
-        final weight = double.tryParse(controller.text);
-        if (weight != null) {
-          context.read<AnalyticsCubit>().addWeightEntry(weight);
-        }
-      },
+    showDialog(
+      context: context,
+      builder: (dialogContext) => LogEntryDialog(
+        title: "Log Weight",
+        label: "Weight (kg)",
+        hint: "Enter weight e.g., 75.5",
+        icon: Icons.scale_rounded,
+        onSave: (val) {
+          final weight = double.tryParse(val);
+          if (weight != null) {
+            context.read<AnalyticsCubit>().addWeightEntry(weight);
+          }
+        },
+      ),
     );
-    // Note: custom_quick_alert might need a way to pass a TextField in content or use a custom content widget
-    // If the package doesn't support custom content easily, I'll assume standard confirm for now or fallback to showDialog.
   }
 
   void _showCalorieDialog(BuildContext context) {
-    // Similar logic for calories
-    final controller = TextEditingController();
-    CustomQuickAlert.confirm(
-      title: "Log Calories",
-      message: "Enter calories consumed:",
-      confirmText: "Save",
-      onConfirm: () {
-        final calories = int.tryParse(controller.text);
-        if (calories != null) {
-          context.read<AnalyticsCubit>().addCalorieEntry(calories);
-        }
-      },
+    showDialog(
+      context: context,
+      builder: (dialogContext) => LogEntryDialog(
+        title: "Log Calories",
+        label: "Calories (kcal)",
+        hint: "Enter calories e.g., 500",
+        icon: Icons.fastfood_rounded,
+        onSave: (val) {
+          final calories = int.tryParse(val);
+          if (calories != null) {
+            context.read<AnalyticsCubit>().addCalorieEntry(calories);
+          }
+        },
+      ),
     );
   }
 }

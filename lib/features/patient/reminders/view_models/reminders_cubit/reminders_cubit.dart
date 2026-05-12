@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:ai_diet_coach/core/constants/app_constants.dart';
 import 'package:ai_diet_coach/core/local_notifications/local_notifications_services.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
 import 'package:ai_diet_coach/features/patient/reminders/models/reminder_model.dart';
 import 'package:ai_diet_coach/features/patient/reminders/view_models/reminders_cubit/reminders_state.dart';
 import 'package:flutter/material.dart';

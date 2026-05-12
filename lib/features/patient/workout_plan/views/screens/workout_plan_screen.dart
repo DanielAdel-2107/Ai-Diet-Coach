@@ -14,9 +14,7 @@ class WorkoutPlanScreen extends StatelessWidget {
       create: (context) => 
           WorkoutPlanCubit(getIt<GeminiService>())..loadSavedPlan(),
       child: const Scaffold(
-        body: SafeArea(
-          child: WorkoutPlanBody(),
-        ),
+        body: WorkoutPlanBody(),
       ),
     );
   }

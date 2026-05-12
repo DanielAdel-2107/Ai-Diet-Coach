@@ -102,3 +102,38 @@ class SugarLevelModel {
     };
   }
 }
+
+class WorkoutLogModel {
+  final String? id;
+  final String userId;
+  final String exerciseName;
+  final double caloriesBurned;
+  final DateTime createdAt;
+
+  WorkoutLogModel({
+    this.id,
+    required this.userId,
+    required this.exerciseName,
+    required this.caloriesBurned,
+    required this.createdAt,
+  });
+
+  factory WorkoutLogModel.fromJson(Map<String, dynamic> json) {
+    return WorkoutLogModel(
+      id: json['id'],
+      userId: json['user_id'],
+      exerciseName: json['exercise_name'] ?? 'Exercise',
+      caloriesBurned: (json['calories_burned'] as num?)?.toDouble() ?? 0.0,
+      createdAt: DateTime.parse(json['completed_at'] ?? json['created_at']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': userId,
+      'exercise_name': exerciseName,
+      'calories_burned': caloriesBurned,
+      'completed_at': createdAt.toIso8601String(),
+    };
+  }
+}

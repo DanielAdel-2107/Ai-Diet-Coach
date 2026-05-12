@@ -1,14 +1,19 @@
+import 'package:ai_diet_coach/features/patient/nutrition/models/nutrition_plan_model.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:ai_diet_coach/features/patient/nutrition/view_models/nutrition_cubit/nutrition_cubit.dart';
 import 'package:ai_diet_coach/features/patient/nutrition/view_models/nutrition_cubit/nutrition_state.dart';
 import 'package:ai_diet_coach/features/patient/nutrition/views/widgets/macros_summary_card.dart';
 import 'package:ai_diet_coach/features/patient/nutrition/views/widgets/meal_section_card.dart';
+import 'package:ai_diet_coach/features/patient/nutrition/views/screens/nutrition_preferences_screen.dart';
+import 'package:ai_diet_coach/core/utils/assets/lotties/app_lotties.dart';
+import 'package:ai_diet_coach/features/patient/nutrition/views/widgets/nutrition_initial_form.dart';
 import 'package:custom_quick_alert/custom_quick_alert.dart';
+import 'package:lottie/lottie.dart';
 
 class PatientNutritionScreenBody extends StatelessWidget {
   const PatientNutritionScreenBody({super.key});
@@ -38,7 +43,9 @@ class PatientNutritionScreenBody extends StatelessWidget {
       },
       child: BlocBuilder<NutritionCubit, NutritionState>(
         builder: (context, state) {
-          if (state is NutritionGenerating) {
+          if (state is NutritionInitial) {
+            return _buildInitialState(context);
+          } else if (state is NutritionGenerating) {
             return _buildLoadingState();
           } else if (state is NutritionSuccess) {
             final plan = state.plan;
@@ -103,20 +110,64 @@ class PatientNutritionScreenBody extends StatelessWidget {
     );
   }
 
+  Widget _buildInitialState(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryDark],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: SafeArea(
+        child: const NutritionInitialForm(),
+      ),
+    );
+  }
+
   Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(color: AppColors.primary),
-          SizedBox(height: SizeConfig.height * 0.03),
-          Text(
-            "AI is analyzing your profile...",
-            style: AppTextStyles.title16GreyW500,
-          ),
-          SizedBox(height: SizeConfig.height * 0.01),
-          const Text("This may take a moment"),
-        ],
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryDark],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Lottie.asset(
+              AppLotties.nutritionDietPlan,
+              width: SizeConfig.width * 0.8,
+              fit: BoxFit.contain,
+            ),
+            SizedBox(height: SizeConfig.height * 0.04),
+            FadeInUp(
+              duration: const Duration(milliseconds: 1000),
+              child: Text(
+                "Creating your magical plan...",
+                style: AppTextStyles.title20WhiteBold,
+              ),
+            ),
+            SizedBox(height: SizeConfig.height * 0.02),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: SizeConfig.width * 0.15),
+              child: Text(
+                "Our AI is carefully selecting meals that match your taste and goals.",
+                textAlign: TextAlign.center,
+                style: AppTextStyles.title14White.copyWith(
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -188,7 +239,27 @@ class PatientNutritionScreenBody extends StatelessWidget {
             "AI Diet Plan",
             style: AppTextStyles.title24WhiteBold,
           ),
-          const SizedBox(width: 48),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider.value(
+                      value: context.read<NutritionCubit>(),
+                      child: const NutritionPreferencesScreen(),
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.tune_rounded, color: Colors.white),
+              padding: const EdgeInsets.all(12),
+            ),
+          ),
         ],
       ),
     );
@@ -207,7 +278,7 @@ class PatientNutritionScreenBody extends StatelessWidget {
     );
   }
 
-  Widget _buildMealsList(dynamic plan) {
+  Widget _buildMealsList(NutritionPlanModel plan) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -264,3 +335,4 @@ class PatientNutritionScreenBody extends StatelessWidget {
     );
   }
 }
+

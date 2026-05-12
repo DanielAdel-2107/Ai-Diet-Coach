@@ -10,17 +10,23 @@ class ProgressSuccess extends ProgressState {
   final List<WeightLogModel> weightLogs;
   final List<CalorieLogModel> calorieLogs;
   final List<SugarLevelModel> sugarLogs;
+  final List<WorkoutLogModel> workoutLogs;
 
   ProgressSuccess({
     required this.weightLogs,
     required this.calorieLogs,
     required this.sugarLogs,
+    required this.workoutLogs,
   });
 
   // Latest values for summary cards
   WeightLogModel? get latestWeight => weightLogs.isNotEmpty ? weightLogs.last : null;
   CalorieLogModel? get latestCalorie => calorieLogs.isNotEmpty ? calorieLogs.last : null;
   SugarLevelModel? get latestSugar => sugarLogs.isNotEmpty ? sugarLogs.last : null;
+
+  double get totalCaloriesBurned {
+    return workoutLogs.fold(0, (sum, item) => sum + item.caloriesBurned);
+  }
 
   double get weightChange {
     if (weightLogs.length < 2) return 0;

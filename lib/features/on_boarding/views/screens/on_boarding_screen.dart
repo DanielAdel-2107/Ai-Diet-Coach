@@ -1,10 +1,11 @@
-import 'package:ai_diet_coach/core/utilies/assets/lotties/app_lotties.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/assets/lotties/app_lotties.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:ai_diet_coach/core/app_route/route_names.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnBoardingScreen extends StatefulWidget {
   const OnBoardingScreen({super.key});
@@ -87,8 +88,12 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
     }
   }
 
-  void _finishOnBoarding() {
-    Navigator.pushReplacementNamed(context, RouteNames.signInScreen);
+  void _finishOnBoarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_seen', true);
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, RouteNames.signInScreen);
+    }
   }
 
   @override

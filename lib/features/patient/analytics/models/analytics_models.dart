@@ -13,10 +13,10 @@ class WeightLogModel {
 
   factory WeightLogModel.fromJson(Map<String, dynamic> json) {
     return WeightLogModel(
-      id: json['id'],
-      userId: json['user_id'],
-      weight: (json['weight'] as num).toDouble(),
-      createdAt: DateTime.parse(json['created_at']),
+      id: json['id']?.toString(),
+      userId: json['user_id']?.toString() ?? '',
+      weight: (json['weight'] as num?)?.toDouble() ?? 0.0,
+      createdAt: DateTime.parse(json['recorded_at'] ?? json['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 
@@ -46,11 +46,11 @@ class CalorieLogModel {
 
   factory CalorieLogModel.fromJson(Map<String, dynamic> json) {
     return CalorieLogModel(
-      id: json['id'],
-      userId: json['user_id'],
-      calories: json['calories'] as int,
-      mealType: json['meal_type'],
-      createdAt: DateTime.parse(json['created_at']),
+      id: json['id']?.toString(),
+      userId: json['user_id']?.toString() ?? '',
+      calories: (json['calories'] as num?)?.toInt() ?? 0,
+      mealType: json['meal_type']?.toString(),
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
     );
   }
 

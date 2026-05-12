@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class ImmersiveBackground extends StatelessWidget {

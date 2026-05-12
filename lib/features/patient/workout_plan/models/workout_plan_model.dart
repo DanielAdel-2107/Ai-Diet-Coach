@@ -48,6 +48,12 @@ class WorkoutPlanModel {
 
     return WorkoutPlanModel(objective: "Your Saved Plan", days: days);
   }
+  Map<String, dynamic> toJson() {
+    return {
+      'objective': objective,
+      'days': days.map((day) => day.toJson()).toList(),
+    };
+  }
 }
 
 class DayWorkoutPlan {
@@ -74,6 +80,15 @@ class DayWorkoutPlan {
           [],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'day': day,
+      'focus': focus,
+      'is_rest_day': isRestDay,
+      'exercises': exercises.map((ex) => ex.toJson()).toList(),
+    };
+  }
 }
 
 class ExercisePlan {
@@ -99,6 +114,16 @@ class ExercisePlan {
       muscle: json['muscle'] as String,
       intensity: json['intensity'] as String,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'sets': sets,
+      'reps': reps,
+      'muscle': muscle,
+      'intensity': intensity,
+    };
   }
 
   Map<String, dynamic> toSupabase(String userId, String day, String focus, bool isRest) {

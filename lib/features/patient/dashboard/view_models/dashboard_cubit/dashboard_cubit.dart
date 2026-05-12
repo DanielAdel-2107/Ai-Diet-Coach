@@ -70,8 +70,8 @@ class DashboardCubit extends Cubit<DashboardState> {
         }
       }
 
-      // 2. Calorie Goal (Defaulting to 2000, should be fetched from profile if available)
-      double caloriesGoal = 2000;
+      // 2. Calorie Goal (Fetch from profile, fallback to 2000)
+      double caloriesGoal = (profile?['calorie_goal'] as num?)?.toDouble() ?? 2000;
 
       // 3. Workout Focus (Handle nulls)
       String workoutPlan = "Rest Day";

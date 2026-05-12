@@ -1,8 +1,10 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
+import 'package:ai_diet_coach/features/patient/workout_plan/view_models/workout_plan_cubit/workout_plan_cubit.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
 import 'package:ai_diet_coach/features/patient/workout_plan/models/workout_plan_model.dart';
 
 class DayExerciseCard extends StatelessWidget {
@@ -40,6 +42,24 @@ class DayExerciseCard extends StatelessWidget {
             const SizedBox(width: 16),
             Expanded(child: _buildExerciseInfo()),
             _buildIntensityBadge(),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: () {
+                context.read<WorkoutPlanCubit>().completeExercise(exercise);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Logged: ${exercise.name}"),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.green),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.green.withOpacity(0.1),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
           ],
         ),
       ),
@@ -96,10 +116,11 @@ class DayExerciseCard extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 8),
-        Row(
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
             _buildDetailTip(Icons.repeat_rounded, "${exercise.sets} Sets", AppColors.secondary),
-            const SizedBox(width: 8),
             _buildDetailTip(Icons.fitness_center_rounded, "${exercise.reps} Reps", AppColors.chartOrange),
           ],
         ),

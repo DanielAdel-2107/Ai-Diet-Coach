@@ -12,9 +12,7 @@ class ProgressScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => ProgressCubit(GetIt.I<SupabaseClient>())..fetchProgressData(),
-      child: const Scaffold(
-        body: ProgressBody(),
-      ),
+      child: const ProgressBody(),
     );
   }
 }

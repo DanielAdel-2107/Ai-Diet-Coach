@@ -1,6 +1,6 @@
-import 'package:ai_diet_coach/core/utilies/colors/app_colors.dart';
-import 'package:ai_diet_coach/core/utilies/sizes/sized_config.dart';
-import 'package:ai_diet_coach/core/utilies/styles/app_text_styles.dart';
+import 'package:ai_diet_coach/core/utils/colors/app_colors.dart';
+import 'package:ai_diet_coach/core/utils/sizes/sized_config.dart';
+import 'package:ai_diet_coach/core/utils/styles/app_text_styles.dart';
 import 'package:ai_diet_coach/features/patient/sugar_device/view_models/sugar_device_cubit/sugar_device_cubit.dart';
 import 'package:ai_diet_coach/features/patient/sugar_device/view_models/sugar_device_cubit/sugar_device_state.dart';
 import 'package:animate_do/animate_do.dart';
